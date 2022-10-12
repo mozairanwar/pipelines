@@ -1,0 +1,44 @@
+pipelines:
+  # pull-requests:
+  #   feature/*: #any branch with a feature prefix
+  #     - step:
+  #         script:
+  #           - ...
+  #   fix/*:
+  #     - step:
+  #         script:
+  #           - ...
+  #   hotfix/*:
+  #     - step:
+  #         script:
+  #           - ...
+  branches:
+    <branch name>:
+      - step:
+          name: Build and Push Docker Image
+          oidc: true
+          script:
+            # build the image
+            - docker build -t <tag name> <context>
+
+            # use the pipe to push the image to AWS ECR
+            - pipe: atlassian/aws-ecr-push-image:1.5.0
+              variables:
+                AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION # repository variable
+                AWS_OIDC_ROLE_ARN: $AWS_OIDC_ROLE_ARN # repository variable
+                IMAGE_NAME: <image name>
+                TAGS: <tag name>
+          services:
+            - docker # Enable Docker for your repository
+      - step:
+          name: Deploy to Fargate
+          deployment: <deployment env name>
+          oidc: true
+          script:
+            - pipe: atlassian/aws-ecs-deploy:1.6.2
+              variables:
+                AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION # repository variable
+                AWS_OIDC_ROLE_ARN: $AWS_OIDC_ROLE_ARN # repository variable
+                CLUSTER_NAME: "<cluster name>"
+                SERVICE_NAME: "<Fargate service name>"
+                FORCE_NEW_DEPLOYMENT: "true"

@@ -1,0 +1,43 @@
+name: "Dev"
+
+on:
+  pull_request:
+    branches: [<branch name>]
+    # types:
+    # - closed # conditional run
+  push:
+    branches: [<branch name>]
+  workflow_dispatch: # Manual pipeline
+
+env: # non-deployment environment variable for all jobs
+  NODE_ENV: production
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16 # Optional
+      - name: Validate package.json and package-lock.json
+        run: npm ci
+
+  deploy:
+    # if: github.event.pull_request.merged == true # conditional deployment
+    runs-on: [self-hosted, <runner label>]
+    name: Deploy to Dev
+    needs: build # Only run if build pass
+    environment: dev # github deployment environment
+    env: # deployment/job env variables
+          user: ${{ secrets.user }}
+          password: ${{ secrets.password }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build and Run Docker
+        env: # deployment/step env variables
+          user: ${{ secrets.user }}
+          password: ${{ secrets.password }}
+        run: |
+          <script>

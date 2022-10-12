@@ -1,0 +1,31 @@
+image: node:<version>
+
+pipelines:
+  branches:
+    <branch name>:
+      - step:
+          name: Build code
+          caches:
+            - node
+          script:
+            - npm install
+            - npm run build
+            - npm run export
+          artifacts:
+            - out/**
+      - step:
+          name: Deploy to S3 bucket
+          deployment: <env name>
+          oidc: true
+          script:
+            - pipe: atlassian/aws-s3-deploy:1.1.0
+              variables:
+                AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+                AWS_OIDC_ROLE_ARN: $AWS_OIDC_ROLE_ARN
+                S3_BUCKET: <bucket name>
+                LOCAL_PATH: "out"
+            - pipe: atlassian/aws-cloudfront-invalidate:0.6.0
+              variables:
+                AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+                AWS_OIDC_ROLE_ARN: $AWS_OIDC_ROLE_ARN
+                DISTRIBUTION_ID: <distribution id>

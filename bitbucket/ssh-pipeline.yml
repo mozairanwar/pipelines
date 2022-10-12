@@ -1,0 +1,37 @@
+pipelines:
+  # pull-requests:
+  #   feature/*: #any branch with a feature prefix
+  #     - step:
+  #         script:
+  #           - ...
+  #   fix/*:
+  #     - step:
+  #         script:
+  #           - ...
+  #   hotfix/*:
+  #     - step:
+  #         script:
+  #           - ...
+  branches:
+    <branch name>:
+      - step:
+          name: Deploy to Server
+          deployment: <deployment env name>
+          script:
+            - pipe: atlassian/ssh-run:0.4.1
+              variables:
+                SSH_USER: $SSH_USER
+                SERVER: $SSH_SERVER
+                COMMAND: |
+                  <script>
+      - step:
+          name: Deploy to Server
+          deployment: <deployment env name>
+          script:
+            - pipe: atlassian/ssh-run:0.4.1
+              variables:
+                SSH_USER: $SSH_USER
+                SERVER: $BASTION_HOST
+                COMMAND: |
+                  ssh $SSH_USER@$APP_SERVER \
+                  "<script>"
